@@ -1,0 +1,8 @@
+# Zig generated
+zig-out/
+.zig-cache/
+
+# General
+*.exe
+*.pdb
+
