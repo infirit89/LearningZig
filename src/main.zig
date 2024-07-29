@@ -42,6 +42,8 @@ const Global = struct {
     player1: Player,
     player2: Player,
     ballDirection: vec2,
+    player1Score: u32,
+    player2Score: u32,
     const PLAYER_XOFFSET = 20.0;
     const BALL_SIZE = vec2.init(20.0, 20.0);
     const PLAYER_SIZE: vec2 = vec2.init(20.0, 60.0);
@@ -76,6 +78,8 @@ const Global = struct {
             .player1 = Player.init(vec2.init(PLAYER_XOFFSET, SCREEN_HEIGHT / 2 - PLAYER_SIZE.y / 2), PLAYER_SIZE),
             .player2 = Player.init(vec2.init(SCREEN_WIDTH - PLAYER_SIZE.x - PLAYER_XOFFSET, SCREEN_HEIGHT / 2 - PLAYER_SIZE.y / 2), PLAYER_SIZE),
             .ballDirection = generateRandomDirection(),
+            .player1Score = 0,
+            .player2Score = 0,
         };
     }
 
@@ -86,23 +90,31 @@ const Global = struct {
         if (this.ball.position.y + this.ball.size.y >= Global.SCREEN_HEIGHT or this.ball.position.y < 0)
             this.ballDirection.y *= -1;
 
-        if (this.ball.position.x + this.ball.size.x >= Global.SCREEN_WIDTH or this.ball.position.x < 0) {
+        if (this.ball.position.x + this.ball.size.x >= Global.SCREEN_WIDTH) {
             Global.cententerBall(&this.ball);
             this.ballDirection = generateRandomDirection();
+            this.player1Score += 1;
+        } else if (this.ball.position.x < 0) {
+            Global.cententerBall(&this.ball);
+            this.ballDirection = generateRandomDirection();
+            this.player2Score += 1;
         }
 
+        // TODO: normals???
         if (this.ball.position.x <= this.player1.position.x + PLAYER_SIZE.x and this.ball.position.x >= this.player1.position.x) {
-            if (this.ball.position.y + BALL_SIZE.y >= this.player1.position.y) {
+            if (this.ball.position.y + BALL_SIZE.y >= this.player1.position.y and this.ball.position.y <= this.player1.position.y + PLAYER_SIZE.y / 2.0) {
                 this.ballDirection = vec2.init(1, -1);
-            } else if (this.ball.position.y <= this.player1.position.y + PLAYER_SIZE.y)
+            } else if (this.ball.position.y + BALL_SIZE.y >= this.player1.position.y + PLAYER_SIZE.y / 2.0 and this.ball.position.y <= this.player1.position.y + PLAYER_SIZE.y) {
                 this.ballDirection = vec2.init(1, 1);
+            }
         }
 
-        if (this.ball.position.x <= this.player2.position.x + PLAYER_SIZE.x and this.ball.position.x >= this.player2.position.x) {
-            if (this.ball.position.y + BALL_SIZE.y >= this.player2.position.y) {
-                this.ballDirection = vec2.init(1, -1);
-            } else if (this.ball.position.y <= this.player2.position.y + PLAYER_SIZE.y)
-                this.ballDirection = vec2.init(1, 1);
+        if (this.ball.position.x + BALL_SIZE.x >= this.player2.position.x and this.ball.position.x <= this.player2.position.x + PLAYER_SIZE.x) {
+            if (this.ball.position.y + BALL_SIZE.y >= this.player2.position.y and this.ball.position.y <= this.player2.position.y + PLAYER_SIZE.y / 2.0) {
+                this.ballDirection = vec2.init(-1, -1);
+            } else if (this.ball.position.y + BALL_SIZE.y >= this.player2.position.y + PLAYER_SIZE.y / 2.0 and this.ball.position.y <= this.player2.position.y + PLAYER_SIZE.y) {
+                this.ballDirection = vec2.init(-1, 1);
+            }
         }
     }
 };
@@ -134,6 +146,11 @@ pub fn main() !void {
         }
 
         global.update();
+
+        const pos1X: i32 = @intFromFloat(global.player1.position.x);
+        const pos2X: i32 = @intFromFloat(global.player2.position.x);
+        rl.drawText(rl.textFormat("%i", .{global.player1Score}), pos1X, 20, 20, rl.Color.light_gray);
+        rl.drawText(rl.textFormat("%i", .{global.player2Score}), pos2X, 20, 20, rl.Color.light_gray);
         global.ball.draw();
         global.player1.draw();
         global.player2.draw();
