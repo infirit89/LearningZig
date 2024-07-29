@@ -7,8 +7,10 @@ const rect = rl.Rectangle;
 const rndGen = std.rand.DefaultPrng;
 
 const BACKGROUND_COLOR = rl.Color.init(25, 25, 25, 255);
+const SCREEN_WIDTH = 600;
+const SCREEN_HEIGHT = 360;
 
-var global: Global = undefined;
+var application: Application = undefined;
 const Ball = struct {
     rectangle: rect,
     direction: vec2,
@@ -24,8 +26,10 @@ const Ball = struct {
     }
 
     fn cententer(this: *Ball) void {
-        this.rectangle.x = Global.SCREEN_WIDTH / 2 - this.rectangle.width / 2;
-        this.rectangle.y = Global.SCREEN_HEIGHT / 2 - this.rectangle.height / 2;
+        const halfScreenWidth: f32 = @floatFromInt(@divTrunc(application.screenWidth, 2));
+        const halfScreenHeight: f32 = @floatFromInt(@divTrunc(application.screenHeight, 2));
+        this.rectangle.x = halfScreenWidth - this.rectangle.width / 2;
+        this.rectangle.y = halfScreenHeight - this.rectangle.height / 2;
     }
 
     fn generateRandomDirection() vec2 {
@@ -46,22 +50,24 @@ const Ball = struct {
 
     pub fn update(this: *Ball) void {
         var ballPosition = vec2.init(this.rectangle.x, this.rectangle.y);
-        ballPosition = ballPosition.add(this.direction.scale(global.frameTimeScaler));
+        ballPosition = ballPosition.add(this.direction.scale(application.frameTimeScaler));
         this.rectangle.x = ballPosition.x;
         this.rectangle.y = ballPosition.y;
 
-        if (this.rectangle.y + this.rectangle.height >= Global.SCREEN_HEIGHT or
+        const screenHeight: f32 = @floatFromInt(application.screenHeight);
+        const screenWidth: f32 = @floatFromInt(application.screenWidth);
+        if (this.rectangle.y + this.rectangle.height >= screenHeight or
             this.rectangle.y < 0)
             this.direction.y *= -1;
 
-        if (this.rectangle.x + this.rectangle.width >= Global.SCREEN_WIDTH) {
+        if (this.rectangle.x + this.rectangle.width >= screenWidth) {
             this.cententer();
             this.direction = generateRandomDirection();
-            global.player1Score += 1;
+            application.player1Score += 1;
         } else if (this.rectangle.x < 0) {
             this.cententer();
             this.direction = generateRandomDirection();
-            global.player2Score += 1;
+            application.player2Score += 1;
         }
     }
 };
@@ -77,57 +83,78 @@ const Player = struct {
     pub fn draw(this: Player) void {
         rl.drawRectangleRec(this.rectangle, rl.Color.white);
     }
+
     pub fn update(this: *Player) void {
         if (rl.isKeyDown(this.controlls.up)) {
-            this.rectangle.y -= 1.0 * global.frameTimeScaler;
+            this.rectangle.y -= 1.0 * application.frameTimeScaler;
         } else if (rl.isKeyDown(this.controlls.down)) {
-            this.rectangle.y += 1.0 * global.frameTimeScaler;
+            this.rectangle.y += 1.0 * application.frameTimeScaler;
         }
     }
 };
 
 // setup:
-const Global = struct {
+const Application = struct {
     ball: Ball,
     player1: Player,
     player2: Player,
     player1Score: u32,
     player2Score: u32,
     frameTimeScaler: f32,
+    screenWidth: i32,
+    screenHeight: i32,
     const PLAYER_XOFFSET = 20.0;
     const BALL_SIZE = vec2.init(20.0, 20.0);
     const PLAYER_SIZE: vec2 = vec2.init(20.0, 60.0);
-    const SCREEN_WIDTH = 600;
-    const SCREEN_HEIGHT = 360;
 
-    pub fn init() Global {
+    pub fn init(windowWidth: comptime_int, windowHeight: comptime_int, title: [*:0]const u8) Application {
+        rl.initWindow(windowWidth, windowHeight, title);
+
         // setup ball:
         const ball = Ball.init(.{ .x = 0, .y = 0, .width = BALL_SIZE.x, .height = BALL_SIZE.y });
 
         // setup player1:
         const player1Controlls = .{ .up = .key_w, .down = .key_s };
-        const playerY = SCREEN_HEIGHT / 2 - PLAYER_SIZE.y / 2;
+        const playerY = windowHeight / 2 - PLAYER_SIZE.y / 2;
         const player1Rect = .{ .x = PLAYER_XOFFSET, .y = playerY, .width = PLAYER_SIZE.x, .height = PLAYER_SIZE.y };
         const player1 =
             Player.init(player1Rect, player1Controlls);
 
         const player2Controlls = .{ .up = .key_up, .down = .key_down };
-        const player2X = SCREEN_WIDTH - PLAYER_SIZE.x - PLAYER_XOFFSET;
+        const player2X = windowWidth - PLAYER_SIZE.x - PLAYER_XOFFSET;
         const player2Rect = .{ .x = player2X, .y = playerY, .width = PLAYER_SIZE.x, .height = PLAYER_SIZE.y };
         const player2 =
             Player.init(player2Rect, player2Controlls);
 
-        return Global{
+        return Application{
             .ball = ball,
             .player1 = player1,
             .player2 = player2,
             .player1Score = 0,
             .player2Score = 0,
             .frameTimeScaler = 0,
+            .screenWidth = windowWidth,
+            .screenHeight = windowHeight,
         };
     }
+    pub fn shutdown() void {
+        rl.closeWindow();
+    }
 
-    pub fn update(this: *Global) void {
+    pub fn run(this: *Application) void {
+        while (!rl.windowShouldClose()) {
+            rl.beginDrawing();
+            defer rl.endDrawing();
+
+            rl.clearBackground(BACKGROUND_COLOR);
+
+            this.update();
+
+            this.draw();
+        }
+    }
+
+    pub fn update(this: *Application) void {
         this.frameTimeScaler = rl.getFrameTime() * 100.0;
 
         this.player1.update();
@@ -141,7 +168,7 @@ const Global = struct {
         }
     }
 
-    pub fn draw(this: Global) void {
+    pub fn draw(this: Application) void {
         const fontSize = 20;
         const textXOffset = 20;
         const textColor = rl.Color.light_gray;
@@ -160,22 +187,9 @@ const Global = struct {
 };
 
 pub fn main() !void {
-    rl.initWindow(Global.SCREEN_WIDTH, Global.SCREEN_HEIGHT, "Test");
-    defer rl.closeWindow();
-
     // set max fps
     //rl.setTargetFPS(60);
-
-    global = Global.init();
-
-    while (!rl.windowShouldClose()) {
-        rl.beginDrawing();
-        defer rl.endDrawing();
-
-        rl.clearBackground(BACKGROUND_COLOR);
-
-        global.update();
-
-        global.draw();
-    }
+    application = Application.init(SCREEN_WIDTH, SCREEN_HEIGHT, "Pong");
+    defer Application.shutdown();
+    application.run();
 }
