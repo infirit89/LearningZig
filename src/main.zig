@@ -49,7 +49,8 @@ const Global = struct {
     const SCREEN_HEIGHT = 360;
 
     fn cententerBall(ballPtr: *Ball) void {
-        ballPtr.position = vec2.init(SCREEN_WIDTH / 2 - BALL_SIZE.x / 2, SCREEN_HEIGHT / 2 - BALL_SIZE.y / 2);
+        ballPtr.position =
+            vec2.init(SCREEN_WIDTH / 2 - BALL_SIZE.x / 2, SCREEN_HEIGHT / 2 - BALL_SIZE.y / 2);
     }
 
     fn generateRandomDirection() vec2 {
@@ -79,7 +80,8 @@ const Global = struct {
     }
 
     pub fn update(this: *Global) void {
-        this.ball.position = this.ball.position.add(this.ballDirection.scale(rl.getFrameTime() * 100.0));
+        this.ball.position =
+            this.ball.position.add(this.ballDirection.scale(rl.getFrameTime() * 100.0));
 
         if (this.ball.position.y + this.ball.size.y >= Global.SCREEN_HEIGHT or this.ball.position.y < 0)
             this.ballDirection.y *= -1;
@@ -87,6 +89,20 @@ const Global = struct {
         if (this.ball.position.x + this.ball.size.x >= Global.SCREEN_WIDTH or this.ball.position.x < 0) {
             Global.cententerBall(&this.ball);
             this.ballDirection = generateRandomDirection();
+        }
+
+        if (this.ball.position.x <= this.player1.position.x + PLAYER_SIZE.x and this.ball.position.x >= this.player1.position.x) {
+            if (this.ball.position.y + BALL_SIZE.y >= this.player1.position.y) {
+                this.ballDirection = vec2.init(1, -1);
+            } else if (this.ball.position.y <= this.player1.position.y + PLAYER_SIZE.y)
+                this.ballDirection = vec2.init(1, 1);
+        }
+
+        if (this.ball.position.x <= this.player2.position.x + PLAYER_SIZE.x and this.ball.position.x >= this.player2.position.x) {
+            if (this.ball.position.y + BALL_SIZE.y >= this.player2.position.y) {
+                this.ballDirection = vec2.init(1, -1);
+            } else if (this.ball.position.y <= this.player2.position.y + PLAYER_SIZE.y)
+                this.ballDirection = vec2.init(1, 1);
         }
     }
 };
