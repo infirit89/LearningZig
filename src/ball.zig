@@ -49,9 +49,13 @@ pub const Ball = struct {
 
         const screenHeight: f32 = @floatFromInt(g.application.screenHeight);
         const screenWidth: f32 = @floatFromInt(g.application.screenWidth);
-        if (this.rectangle.y + this.rectangle.height >= screenHeight or
-            this.rectangle.y < 0)
+        if (this.rectangle.y + this.rectangle.height >= screenHeight) {
             this.direction.y *= -1;
+            this.rectangle.y = screenHeight - this.rectangle.height;
+        } else if (this.rectangle.y < 0) {
+            this.direction.y *= -1;
+            this.rectangle.y = 0;
+        }
 
         if (this.rectangle.x + this.rectangle.width >= screenWidth) {
             this.cententer();

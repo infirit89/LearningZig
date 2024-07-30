@@ -8,9 +8,10 @@ pub const Player = struct {
     const Controlls = struct { up: rl.KeyboardKey, down: rl.KeyboardKey };
     rectangle: rect,
     controlls: Controlls,
+    velocity: f32,
 
     pub fn init(rectangle: rect, controlls: Controlls) Player {
-        return Player{ .rectangle = rectangle, .controlls = controlls };
+        return Player{ .rectangle = rectangle, .controlls = controlls, .velocity = 0.0 };
     }
 
     pub fn draw(this: *const Player) void {
@@ -18,12 +19,15 @@ pub const Player = struct {
     }
 
     pub fn update(this: *Player) void {
+        const dragCoef = 0.01;
         if (rl.isKeyDown(this.controlls.up)) {
-            this.rectangle.y -= 1.0 * g.application.frameTimeScaler;
+            this.velocity -= 1.0 * g.application.frameTimeScaler / 10.0;
         } else if (rl.isKeyDown(this.controlls.down)) {
-            this.rectangle.y += 1.0 * g.application.frameTimeScaler;
+            this.velocity += 1.0 * g.application.frameTimeScaler / 10.0;
         }
 
+        this.velocity *= 1.0 - dragCoef;
+        this.rectangle.y += this.velocity;
         const screenHeightF: f32 = @floatFromInt(g.application.screenHeight);
         if (this.rectangle.y <= 0) {
             this.rectangle.y = 0;
