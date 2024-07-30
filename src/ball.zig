@@ -56,12 +56,11 @@ pub const Ball = struct {
         if (this.rectangle.x + this.rectangle.width >= screenWidth) {
             this.cententer();
             this.direction = generateRandomDirection();
-            g.application.player1Score += 1;
+            g.application.gameScene.playerLScore += 1;
         } else if (this.rectangle.x < 0) {
             this.cententer();
             this.direction = generateRandomDirection();
-            std.debug.print("cum cum cum", .{});
-            g.application.player2Score += 1;
+            g.application.gameScene.playerRScore += 1;
         }
     }
 };
