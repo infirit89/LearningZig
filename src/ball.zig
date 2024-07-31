@@ -11,7 +11,10 @@ pub const Ball = struct {
     direction: vec2,
 
     pub fn init(rectangle: rect) Ball {
-        return Ball{ .rectangle = rectangle, .direction = generateRandomDirection() };
+        return Ball{
+            .rectangle = rectangle,
+            .direction = generateRandomDirection(),
+        };
     }
 
     pub fn draw(this: Ball) void {
@@ -19,8 +22,12 @@ pub const Ball = struct {
     }
 
     pub fn cententer(this: *Ball) void {
-        const halfScreenWidth: f32 = @floatFromInt(@divTrunc(g.application.screenWidth, 2));
-        const halfScreenHeight: f32 = @floatFromInt(@divTrunc(g.application.screenHeight, 2));
+        const halfScreenWidth: f32 = @floatFromInt(
+            @divTrunc(g.application.screenWidth, 2),
+        );
+        const halfScreenHeight: f32 = @floatFromInt(
+            @divTrunc(g.application.screenHeight, 2),
+        );
         this.rectangle.x = halfScreenWidth - this.rectangle.width / 2;
         this.rectangle.y = halfScreenHeight - this.rectangle.height / 2;
     }
@@ -43,7 +50,9 @@ pub const Ball = struct {
 
     pub fn update(this: *Ball) void {
         var ballPosition = vec2.init(this.rectangle.x, this.rectangle.y);
-        ballPosition = ballPosition.add(this.direction.scale(g.application.frameTimeScaler));
+        ballPosition = ballPosition.add(
+            this.direction.scale(g.application.frameTimeScaler),
+        );
         this.rectangle.x = ballPosition.x;
         this.rectangle.y = ballPosition.y;
 

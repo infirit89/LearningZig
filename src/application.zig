@@ -19,7 +19,11 @@ pub const Application = struct {
     screenHeight: i32,
     gameScene: *Game,
 
-    pub fn init(windowWidth: comptime_int, windowHeight: comptime_int, title: [*:0]const u8) Application {
+    pub fn init(
+        windowWidth: comptime_int,
+        windowHeight: comptime_int,
+        title: [*:0]const u8,
+    ) Application {
         rl.initWindow(windowWidth, windowHeight, title);
 
         return Application{

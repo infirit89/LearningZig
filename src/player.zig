@@ -11,7 +11,11 @@ pub const Player = struct {
     velocity: f32,
 
     pub fn init(rectangle: rect, controlls: Controlls) Player {
-        return Player{ .rectangle = rectangle, .controlls = controlls, .velocity = 0.0 };
+        return Player{
+            .rectangle = rectangle,
+            .controlls = controlls,
+            .velocity = 0.0,
+        };
     }
 
     pub fn draw(this: *const Player) void {
